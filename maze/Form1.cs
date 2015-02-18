@@ -9,10 +9,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace maze
-{
-    public partial class Form1 : Form
-    {
+namespace maze {
+	public partial class Form1 : Form {
 		private Solver solve;
 
 		private char keyWarp(Keys c) {
@@ -28,29 +26,26 @@ namespace maze
 			return ' ';
 		}
 
-        public Form1()
-        {
-            InitializeComponent();
-        }
+		public Form1() {
+			InitializeComponent();
+		}
 
-        public void Form1_KeyPress(object sender, KeyPressEventArgs e)
-        {
-			e.Handled = solve.Go(keyWarp((Keys) e.KeyChar));
-            Graphics g = this.CreateGraphics();
-            solve.DrawMaze(g, true);
-            g.Dispose();
-        }
+		public void Form1_KeyPress(object sender, KeyPressEventArgs e) {
+			e.Handled = solve.Go(keyWarp((Keys)e.KeyChar));
+			Graphics g = this.CreateGraphics();
+			solve.DrawMaze(g, true);
+			g.Dispose();
+		}
 
 		private void pictureBox1_Paint(object sender, PaintEventArgs e) {
 			solve.DrawMaze(e.Graphics, true);
 		}
 
-        private void Form1_Load(object sender, EventArgs e)
-        {
+		private void Form1_Load(object sender, EventArgs e) {
 			solve = new Solver();
 
-            this.KeyPreview = true;
-            this.KeyPress += new KeyPressEventHandler(this.Form1_KeyPress);
+			this.KeyPreview = true;
+			this.KeyPress += new KeyPressEventHandler(this.Form1_KeyPress);
 
 			this.pictureBox1.ClientSize = new Size(Solver.cellSize * Solver.mazeSize, Solver.cellSize * Solver.mazeSize);
 			this.pictureBox1.Paint += new PaintEventHandler(this.pictureBox1_Paint);
@@ -63,16 +58,15 @@ namespace maze
 			this.ClientSize = new Size(Solver.cellSize * Solver.mazeSize + 5, Solver.cellSize * Solver.mazeSize + 60);
 
 			solve.Initialize("http://104.131.57.70:3001");
-        }
+		}
 
-        private void button1_Click(object sender, EventArgs e)
-        {
+		private void button1_Click(object sender, EventArgs e) {
 			Thread thread = new Thread(new ThreadStart(() => {
 				Graphics g = this.pictureBox1.CreateGraphics();
 				solve.Solve(g);
 				g.Dispose();
 			}));
 			thread.Start();
-        }
-    }
+		}
+	}
 }
