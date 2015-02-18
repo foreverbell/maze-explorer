@@ -11,7 +11,8 @@ using System.Windows.Forms;
 
 namespace maze {
 	public partial class Form1 : Form {
-		private Solver solve;
+		private Solver mSolve;
+		private Thread mThread;
 
 		private char keyWarp(Keys c) {
 			if (c == Keys.A) {
@@ -31,21 +32,22 @@ namespace maze {
 		}
 
 		public void Form1_KeyPress(object sender, KeyPressEventArgs e) {
-			e.Handled = solve.Go(keyWarp((Keys)e.KeyChar));
+			e.Handled = mSolve.Go(keyWarp((Keys)e.KeyChar));
 			Graphics g = this.CreateGraphics();
-			solve.DrawMaze(g, true);
+			mSolve.DrawMaze(g, true);
 			g.Dispose();
 		}
 
 		private void pictureBox1_Paint(object sender, PaintEventArgs e) {
-			solve.DrawMaze(e.Graphics, true);
+			mSolve.DrawMaze(e.Graphics, true);
 		}
 
 		private void Form1_Load(object sender, EventArgs e) {
-			solve = new Solver();
+			mSolve = new Solver();
 
 			this.KeyPreview = true;
 			this.KeyPress += new KeyPressEventHandler(this.Form1_KeyPress);
+			this.FormClosed += new FormClosedEventHandler(Form1_FormClosed);
 
 			this.pictureBox1.ClientSize = new Size(Solver.cellSize * Solver.mazeSize, Solver.cellSize * Solver.mazeSize);
 			this.pictureBox1.Paint += new PaintEventHandler(this.pictureBox1_Paint);
@@ -57,16 +59,20 @@ namespace maze {
 			this.Text = "Maze Puzzle Solver";
 			this.ClientSize = new Size(Solver.cellSize * Solver.mazeSize + 5, Solver.cellSize * Solver.mazeSize + 60);
 
-			solve.Initialize("http://104.131.57.70:3001");
+			mSolve.Initialize("http://104.131.57.70:3001");
+		}
+
+		void Form1_FormClosed(object sender, FormClosedEventArgs e) {
+			mThread.Abort();
 		}
 
 		private void button1_Click(object sender, EventArgs e) {
-			Thread thread = new Thread(new ThreadStart(() => {
+			mThread = new Thread(new ThreadStart(() => {
 				Graphics g = this.pictureBox1.CreateGraphics();
-				solve.Solve(g);
+				mSolve.Solve(g);
 				g.Dispose();
 			}));
-			thread.Start();
+			mThread.Start();
 		}
 	}
 }
