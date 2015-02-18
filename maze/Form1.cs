@@ -62,7 +62,7 @@ namespace maze
 			this.Text = "Maze Puzzle Solver";
 			this.ClientSize = new Size(Solver.cellSize * Solver.mazeSize + 5, Solver.cellSize * Solver.mazeSize + 60);
 
-			solve.Initialize("http://localhost:3001");
+			solve.Initialize("http://104.131.57.70:3001");
         }
 
         private void button1_Click(object sender, EventArgs e)

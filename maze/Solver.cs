@@ -86,8 +86,8 @@ namespace maze {
 			SolidBrush whiteBrush = new SolidBrush(Color.White);
 			SolidBrush wallBrush = new SolidBrush(Color.Red);
 
-			for (int i = 0; i < 202; ++i) {
-				for (int j = 0; j < 202; ++j) {
+			for (int i = 0; i < mazeSize; ++i) {
+				for (int j = 0; j < mazeSize; ++j) {
 					int cx = j * cellSize + 5, cy = i * cellSize + 5;
 					int value = mMaze[i, j];
 
