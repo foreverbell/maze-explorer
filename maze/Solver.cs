@@ -22,31 +22,21 @@ namespace maze {
 		private const int mazeW = 8;
 
 		private int mCurX, mCurY;
+		private int mTreasureX, mTreasureY;
 		private int[,] mMaze = new int[mazeSize, mazeSize];
-		private bool[,] mTarget = new bool[mazeSize, mazeSize];
 		private bool[,] mVisited = new bool[mazeSize, mazeSize];
+		private bool mTreasureFound, mTreasureAvailable;
 		private bool[,] mRefreshRequired = new bool[mazeSize, mazeSize];
 		private Queue<Tuple<char, int, int>> mOpQueue = new Queue<Tuple<char, int, int>>();
 		private Socket mSocket;
 
-		private void ClearOpQueue() {
-			Tuple<char, int, int>[] ops = mOpQueue.ToArray();
-
-			for (int i = 0; i < ops.Length; ++i) {
-				mSocket.Emit("walk", ops[i].Item1.ToString());
-			}
-			while (mOpQueue.Count != 0) {
-				Thread.Sleep(500);
-			}
-		}
-
 		public void Initialize(String uri) {
-			mCurX = mazeSize / 2;
-			mCurY = mazeSize / 2;
+			mCurX = mCurY = mazeSize / 2;
+			mTreasureX = mTreasureY = -1;
+			mTreasureFound = mTreasureAvailable = false;
 			for (int i = 0; i < mazeSize; ++i) {
 				for (int j = 0; j < mazeSize; ++j) {
 					mMaze[i, j] = -1;
-					mTarget[i, j] = false;
 					mRefreshRequired[i, j] = true;
 				}
 			}
@@ -67,7 +57,9 @@ namespace maze {
 							int dat = Convert.ToInt32(cell[0]);
 							mMaze[x + i - 5, y + j - 5] = dat;
 							if (cell.Length > 1) {
-								mTarget[x + i - 5, y + j - 5] = true;
+								mTreasureX = x + i - 5;
+								mTreasureY = y + j - 5;
+								mTreasureFound = true;
 							}
 							mRefreshRequired[x + i - 5, y + j - 5] = true;
 						}
@@ -114,8 +106,7 @@ namespace maze {
 							if (down) {
 								graph.FillRectangle(wallBrush, new Rectangle(cx, cy + cellSize, cellSize, wallWidth));
 							}
-
-							if (mTarget[i, j]) {
+							if (i == mTreasureX && j == mTreasureY) {
 								graph.FillRectangle(wallBrush, new Rectangle(cx, cy, cellSize, cellSize));
 							}
 						}
@@ -135,6 +126,30 @@ namespace maze {
 			wallBrush.Dispose();
 
 			Thread.Sleep(20);
+		}
+
+		private void ClearOpQueue() {
+			Tuple<char, int, int>[] ops = mOpQueue.ToArray();
+
+			for (int i = 0; i < ops.Length; ++i) {
+				mSocket.Emit("walk", ops[i].Item1.ToString());
+			}
+			while (mOpQueue.Count != 0) {
+				Thread.Sleep(500);
+			}
+		}
+
+		private char Rotate(char dir) {
+			if (dir == 'W') {
+				return 'N';
+			} else if (dir == 'N') {
+				return 'E';
+			} else if (dir == 'E') {
+				return 'S';
+			} else if (dir == 'S') {
+				return 'W';
+			}
+			throw new ArgumentException();
 		}
 
 		public bool Go(char keyChar) {
@@ -183,17 +198,64 @@ namespace maze {
 			return false;
 		}
 
-		private char Rotate(char dir) {
-			if (dir == 'W') {
-				return 'N';
-			} else if (dir == 'N') {
-				return 'E';
-			} else if (dir == 'E') {
-				return 'S';
-			} else if (dir == 'S') {
-				return 'W';
+		private bool CheckTreasure() {
+			if (!mTreasureFound) {
+				return false;
 			}
-			throw new ArgumentException();
+
+			Queue<Tuple<int, int>> queue = new Queue<Tuple<int, int>>();
+			Tuple<char, int, int>[,] nodeParnet = new Tuple<char, int, int>[mazeSize, mazeSize];
+			bool[,] nodeVisited = new bool[mazeSize, mazeSize];
+
+			queue.Enqueue(new Tuple<int, int>(mCurX, mCurY));
+			nodeVisited[mCurX, mCurY] = true;
+			while (queue.Count != 0) {
+				int x = queue.Peek().Item1, y = queue.Peek().Item2;
+
+				queue.Dequeue();
+
+				if (x == mTreasureX && y == mTreasureY) {
+					Stack<char> ops = new Stack<char>();
+					while (x != mCurX || y != mCurY) {
+						ops.Push(nodeParnet[x, y].Item1);
+						int tempX = nodeParnet[x, y].Item2, tempY = nodeParnet[x, y].Item3;
+						x = tempX;
+						y = tempY;
+					}
+					while (ops.Count > 0) {
+						Go(ops.Pop());
+					}
+					ClearOpQueue();
+					mTreasureAvailable = true;
+					return true;
+				}
+
+				if ((mMaze[x, y] & mazeN) == mazeN && mMaze[x - 1, y] != -1 && !nodeVisited[x - 1, y]) {
+					nodeVisited[x - 1, y] = true;
+					nodeParnet[x - 1, y] = new Tuple<char, int, int>('N', x, y);
+					queue.Enqueue(new Tuple<int, int>(x - 1, y));
+				}
+
+				if ((mMaze[x, y] & mazeS) == mazeS && mMaze[x + 1, y] != -1 && !nodeVisited[x + 1, y]) {
+					nodeVisited[x + 1, y] = true;
+					nodeParnet[x + 1, y] = new Tuple<char, int, int>('S', x, y);
+					queue.Enqueue(new Tuple<int, int>(x + 1, y));
+				}
+
+				if ((mMaze[x, y] & mazeW) == mazeW && mMaze[x, y - 1] != -1 && !nodeVisited[x, y - 1]) {
+					nodeVisited[x, y - 1] = true;
+					nodeParnet[x, y - 1] = new Tuple<char, int, int>('W', x, y);
+					queue.Enqueue(new Tuple<int, int>(x, y - 1));
+				}
+
+				if ((mMaze[x, y] & mazeE) == mazeE && mMaze[x, y + 1] != -1 && !nodeVisited[x, y + 1]) {
+					nodeVisited[x, y + 1] = true;
+					nodeParnet[x, y + 1] = new Tuple<char, int, int>('E', x, y);
+					queue.Enqueue(new Tuple<int, int>(x, y + 1));
+				}
+			}
+
+			return false;
 		}
 
 		private void Dfs(int x, int y, char from, Graphics g) {
@@ -231,9 +293,16 @@ namespace maze {
 						break;
 				}
 				from = Rotate(from);
+				if (mTreasureAvailable) {
+					break;
+				} else {
+					CheckTreasure();
+				}
 			}
-			Go(from);
-			DrawMaze(g);
+			if (!mTreasureAvailable) {
+				Go(from);
+				DrawMaze(g);
+			}
 		}
 
 		public void Solve(Graphics g) {

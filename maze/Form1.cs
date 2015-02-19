@@ -14,28 +14,8 @@ namespace maze {
 		private Solver mSolve;
 		private Thread mThread;
 
-		private char keyWarp(Keys c) {
-			if (c == Keys.A) {
-				return 'W';
-			} else if (c == Keys.D) {
-				return 'E';
-			} else if (c == Keys.W) {
-				return 'N';
-			} else if (c == Keys.S) {
-				return 'S';
-			}
-			return ' ';
-		}
-
 		public Form1() {
 			InitializeComponent();
-		}
-
-		public void Form1_KeyPress(object sender, KeyPressEventArgs e) {
-			e.Handled = mSolve.Go(keyWarp((Keys)e.KeyChar));
-			Graphics g = this.CreateGraphics();
-			mSolve.DrawMaze(g, true);
-			g.Dispose();
 		}
 
 		private void pictureBox1_Paint(object sender, PaintEventArgs e) {
@@ -45,8 +25,6 @@ namespace maze {
 		private void Form1_Load(object sender, EventArgs e) {
 			mSolve = new Solver();
 
-			this.KeyPreview = true;
-			this.KeyPress += new KeyPressEventHandler(this.Form1_KeyPress);
 			this.FormClosed += new FormClosedEventHandler(Form1_FormClosed);
 
 			this.pictureBox1.ClientSize = new Size(Solver.cellSize * Solver.mazeSize, Solver.cellSize * Solver.mazeSize);
@@ -63,7 +41,9 @@ namespace maze {
 		}
 
 		void Form1_FormClosed(object sender, FormClosedEventArgs e) {
-			mThread.Abort();
+			if (mThread != null) {
+				mThread.Abort();
+			}
 		}
 
 		private void button1_Click(object sender, EventArgs e) {
