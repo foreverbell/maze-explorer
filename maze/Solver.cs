@@ -198,7 +198,7 @@ namespace maze {
 			return false;
 		}
 
-		private bool CheckTreasure() {
+		private bool CheckTreasure(Graphics g) {
 			if (!mTreasureFound) {
 				return false;
 			}
@@ -224,6 +224,7 @@ namespace maze {
 					}
 					while (ops.Count > 0) {
 						Go(ops.Pop());
+						DrawMaze(g);
 					}
 					ClearOpQueue();
 					mTreasureAvailable = true;
@@ -296,7 +297,7 @@ namespace maze {
 				if (mTreasureAvailable) {
 					break;
 				} else {
-					CheckTreasure();
+					CheckTreasure(g);
 				}
 			}
 			if (!mTreasureAvailable) {
