@@ -12,7 +12,7 @@ using System.Windows.Forms;
 namespace MazeExplorer {
 
 	class Solver {
-		public const int mazeSize = 202;
+		public const int mazeSize = 202 + 12;
 		public const int cellSize = 3;
 		public const int wallWidth = 1;
 
