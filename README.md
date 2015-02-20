@@ -17,4 +17,4 @@ Run maze-explorer, and click `Go!`
 
 ## Screen-cast
 
-![](https://raw.githubusercontent.com/foreverbell/maze-explorer/master/resource/screen-cast.png)
+![](https://raw.githubusercontent.com/foreverbell/maze-explorer/master/screen-cast.png)
