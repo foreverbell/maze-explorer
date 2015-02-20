@@ -1,4 +1,4 @@
-﻿namespace maze
+﻿namespace MazeExplorer
 {
     partial class Form1
     {

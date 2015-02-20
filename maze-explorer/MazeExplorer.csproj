@@ -7,8 +7,8 @@
     <ProjectGuid>{6B3A012D-054F-45ED-BBC0-6E1328D51170}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>maze</RootNamespace>
-    <AssemblyName>maze</AssemblyName>
+    <RootNamespace>MazeExplorer</RootNamespace>
+    <AssemblyName>MazeExplorer</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace maze.Properties
+namespace MazeExplorer.Properties
 {
 
 

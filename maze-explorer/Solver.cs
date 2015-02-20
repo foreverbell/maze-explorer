@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Quobject.SocketIoClientDotNet.Client;
 using System.Windows.Forms;
 
-namespace maze {
+namespace MazeExplorer {
 
 	class Solver {
 		public const int mazeSize = 202;

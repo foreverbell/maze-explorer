@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace maze {
+namespace MazeExplorer {
 
 	public partial class Form1 : Form {
 
