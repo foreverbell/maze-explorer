@@ -14,3 +14,7 @@ SocketIoClientDotNet: https://github.com/Quobject/SocketIoClientDotNet
 	cd ..
 
 Run maze-explorer, and click `Go!`
+
+## Screen-cast
+
+![](https://raw.githubusercontent.com/foreverbell/maze-explorer/master/resource/screen-cast.png)
