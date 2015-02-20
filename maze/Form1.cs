@@ -10,7 +10,12 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace maze {
+
 	public partial class Form1 : Form {
+
+		private const String uri = "http://localhost:3001";
+		// private const String uri = "http://104.131.57.70:3001";
+
 		private Solver mSolve;
 		private Thread mThread;
 
@@ -37,7 +42,7 @@ namespace maze {
 			this.Text = "Maze Puzzle Solver";
 			this.ClientSize = new Size(Solver.cellSize * Solver.mazeSize + 5, Solver.cellSize * Solver.mazeSize + 60);
 
-			mSolve.Initialize("http://104.131.57.70:3001");
+			mSolve.Initialize(uri);
 		}
 
 		void Form1_FormClosed(object sender, FormClosedEventArgs e) {
