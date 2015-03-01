@@ -26,9 +26,10 @@ namespace MazeExplorer {
 		private int[,] mMaze = new int[mazeSize, mazeSize];
 		private bool[,] mVisited = new bool[mazeSize, mazeSize];
 		private bool mTreasureFound, mTreasureAvailable;
-		private bool[,] mRefreshRequired = new bool[mazeSize, mazeSize];
+		private bool[,] mDirty = new bool[mazeSize, mazeSize];
 		private Queue<Tuple<char, int, int>> mOpQueue = new Queue<Tuple<char, int, int>>();
 		private Socket mSocket;
+		private readonly object mSyncPrimitive = new object();
 
 		public void Initialize(String uri) {
 			mCurX = mCurY = mazeSize / 2;
@@ -37,13 +38,13 @@ namespace MazeExplorer {
 			for (int i = 0; i < mazeSize; ++i) {
 				for (int j = 0; j < mazeSize; ++j) {
 					mMaze[i, j] = -1;
-					mRefreshRequired[i, j] = true;
+					mDirty[i, j] = true;
 				}
 			}
 			mOpQueue.Enqueue(new Tuple<char, int, int>(' ', mCurX, mCurY));
 			mSocket = IO.Socket(uri);
 			mSocket.On("map", (raw) => {
-				Thread.BeginCriticalRegion(); {
+				lock (mSyncPrimitive) {
 					// Console.WriteLine(raw);
 					String data = (String)raw;
 					String[] map = data.Split(',');
@@ -61,10 +62,13 @@ namespace MazeExplorer {
 								mTreasureY = y + j - 5;
 								mTreasureFound = true;
 							}
-							mRefreshRequired[x + i - 5, y + j - 5] = true;
+							mDirty[x + i - 5, y + j - 5] = true;
 						}
 					}
-				} Thread.EndCriticalRegion();
+					if (mOpQueue.Count == 0) {
+						Monitor.Pulse(mSyncPrimitive);
+					}
+				}
 			});
 			mSocket.On("msg", (data) => {
 				MessageBox.Show((String)data);
@@ -83,7 +87,7 @@ namespace MazeExplorer {
 					int cx = j * cellSize + 5, cy = i * cellSize + 5;
 					int value = mMaze[i, j];
 
-					if (force || mRefreshRequired[i, j]) {
+					if (force || mDirty[i, j]) {
 						if (value == -1) {
 							graph.FillRectangle(blackBrush, new Rectangle(cx, cy, cellSize, cellSize));
 						} else {
@@ -110,12 +114,12 @@ namespace MazeExplorer {
 								graph.FillRectangle(wallBrush, new Rectangle(cx, cy, cellSize, cellSize));
 							}
 						}
-						mRefreshRequired[i, j] = false;
+						mDirty[i, j] = false;
 					}
 
 					if (i == mCurX && j == mCurY) {
 						graph.FillRectangle(blackBrush, new Rectangle(cx + 1, cy + 1, cellSize - 1, cellSize - 1));
-						mRefreshRequired[i, j] = true;
+						mDirty[i, j] = true;
 					}
 
 				}
@@ -129,13 +133,11 @@ namespace MazeExplorer {
 		}
 
 		private void ClearOpQueue() {
-			Tuple<char, int, int>[] ops = mOpQueue.ToArray();
-
-			for (int i = 0; i < ops.Length; ++i) {
-				mSocket.Emit("walk", ops[i].Item1.ToString());
-			}
-			while (mOpQueue.Count != 0) {
-				Thread.Sleep(500);
+			lock (mSyncPrimitive) {
+				foreach (Tuple<char, int, int> op in mOpQueue) {
+					mSocket.Emit("walk", op.Item1.ToString());
+				}
+				Monitor.Wait(mSyncPrimitive);
 			}
 		}
 
